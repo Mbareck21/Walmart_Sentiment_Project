@@ -204,16 +204,24 @@ if df_to_process is not None:
     
             # E. Download Button (The Automation)
     
-            st.download_button(
+                st.download_button(
     
-                label="📥 Download Processed Report (CSV)",
+                    label="📥 Download Processed Report (CSV)",
     
-                data=processed_df.to_csv(index=False).encode('utf-8'),
+                    data=processed_df.to_csv(index=False).encode('utf-8'),
     
-                file_name='walmart_voc_analyzed.csv',
+                    file_name='walmart_voc_analyzed.csv',
     
-                mime='text/csv',
+                    mime='text/csv',
     
-            )
+                )
+    
+            
+    
+            st.divider()
+    
+            st.caption("© 2026 LEMINE MBARECK | Walmart VoC Insight Engine")
+    
+            
     
     

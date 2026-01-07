@@ -29,3 +29,6 @@ This is a Streamlit application that analyzes customer reviews using NLTK (VADER
 2.  **Explore Data:**
     *   Click **"🚀 Use Sample Data"** to instantly see the dashboard using the built-in dataset.
     *   Alternatively, upload your own CSV file. The app will automatically look for columns containing "Review Text" and "Department Name".
+
+## License
+© 2026 LEMINE MBARECK. This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
