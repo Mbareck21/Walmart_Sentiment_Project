@@ -74,10 +74,17 @@ def analyze_data(df):
 
 # --- 3. THE USER INTERFACE (The "Frontend") ---
 st.title("🛒 Walmart Voice of Customer (VoC) Engine")
-st.markdown("""
-**Automated Analyst Tool:** Upload raw review data to instantly identify 
-merchandising risks and supply chain pain points.
-""")
+
+with st.expander("ℹ️ How this tool works (Backend Logic)", expanded=True):
+    st.markdown("""
+    **The Problem:** Merchandising teams are overwhelmed by thousands of customer reviews, often missing critical quality control or supply chain issues buried in the noise.
+    
+    **The Solution:** This automated engine processes raw text to surface "needles in the haystack" instantly.
+    
+    **Technical Approach:**
+    1. **Sentiment Analysis:** We utilize the **[NLTK VADER Lexicon](https://github.com/cjhutto/vaderSentiment)** (Valence Aware Dictionary and sEntiment Reasoner). Unlike simple positive/negative counters, VADER is sensitive to polarity (intensity) and context (e.g., "not good" vs "good"), making it ideal for human feedback.
+    2. **Logic-Based Tagging:** A custom rule engine scans high-risk keywords (e.g., "tight", "torn", "late") to auto-categorize root causes into buckets like **Sizing**, **Quality**, or **Supply Chain**.
+    """)
 
 # File Uploader & Sample Data
 col_load1, col_load2 = st.columns([2, 1])
@@ -85,7 +92,7 @@ with col_load1:
     uploaded_file = st.file_uploader("Upload Monthly Review CSV", type=['csv'])
 
 with col_load2:
-    st.write("---")
+    st.write("Women's E-Commerce Clothing Reviews")
     use_sample = st.button("🚀 Use Sample Data")
 
 df_to_process = None
