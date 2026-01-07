@@ -23,8 +23,9 @@ This is a Streamlit application that analyzes customer reviews using NLTK (VADER
 
 1.  **Run the application:**
     ```bash
-    streamlit run app.py
+    python -m streamlit run app.py
     ```
 
-2.  **Upload Data:**
-    Use the provided `sample_reviews.csv` to test the dashboard.
+2.  **Explore Data:**
+    *   Click **"🚀 Use Sample Data"** to instantly see the dashboard using the built-in dataset.
+    *   Alternatively, upload your own CSV file. The app will automatically look for columns containing "Review Text" and "Department Name".

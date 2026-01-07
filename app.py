@@ -19,9 +19,26 @@ def analyze_data(df):
     # Initialize VADER
     analyzer = SentimentIntensityAnalyzer()
     
-    # Clean Data
-    if 'Review Text' in df.columns:
-        df = df.rename(columns={'Review Text': 'review_text', 'Department Name': 'department_name'})
+    # Flexible Column Mapping
+    col_map = {
+        'Review Text': 'review_text',
+        'Department Name': 'department_name'
+    }
+    
+    # Try to find columns even if they have different casing or slight variations
+    for target, new_name in col_map.items():
+        for col in df.columns:
+            if target.lower() in str(col).lower():
+                df = df.rename(columns={col: new_name})
+                break
+    
+    # Fallback if columns not found
+    if 'review_text' not in df.columns:
+        st.error("Could not find a 'Review Text' column in the uploaded file.")
+        return None
+    
+    if 'department_name' not in df.columns:
+        df['department_name'] = 'Unknown'
     
     df = df.dropna(subset=['review_text'])
     
@@ -62,63 +79,134 @@ st.markdown("""
 merchandising risks and supply chain pain points.
 """)
 
-# File Uploader
-uploaded_file = st.file_uploader("Upload Monthly Review CSV", type=['csv'])
+# File Uploader & Sample Data
+col_load1, col_load2 = st.columns([2, 1])
+with col_load1:
+    uploaded_file = st.file_uploader("Upload Monthly Review CSV", type=['csv'])
+
+with col_load2:
+    st.write("---")
+    use_sample = st.button("🚀 Use Sample Data")
+
+df_to_process = None
 
 if uploaded_file is not None:
+    df_to_process = pd.read_csv(uploaded_file)
+elif use_sample:
+    import os
+    sample_path = 'data/Reviews.csv'
+    if os.path.exists(sample_path):
+        df_to_process = pd.read_csv(sample_path)
+    else:
+        st.error("Sample data file not found at 'data/Reviews.csv'")
+
+if df_to_process is not None:
     # A. Load and Process
     with st.spinner('Running AI Analysis...'):
-        raw_df = pd.read_csv(uploaded_file)
-        processed_df = analyze_data(raw_df)
+        processed_df = analyze_data(df_to_process)
     
-    st.success("Analysis Complete!")
+        if processed_df is not None:
     
-    # B. KPI Row
-    col1, col2, col3 = st.columns(3)
+            st.success("Analysis Complete!")
     
-    total_reviews = len(processed_df)
-    avg_sentiment = processed_df['sentiment_score'].mean()
-    negative_count = len(processed_df[processed_df['sentiment_label'] == 'Negative'])
+        
     
-    col1.metric("Total Feedback Volume", f"{total_reviews:,}")
-    col2.metric("Avg Customer Sentiment", f"{avg_sentiment:.2f}")
-    col3.metric("Urgent Negative Reviews", f"{negative_count}", delta_color="inverse")
+            # B. KPI Row
     
-    st.divider()
-
-    # C. Interactive Charts (Plotly)
+            col1, col2, col3 = st.columns(3)
     
-    # Chart 1: Problems by Department (The "Where?")
-    st.subheader("⚠️ Risk Analysis by Department")
-    dept_risk = processed_df[processed_df['sentiment_label'] == 'Negative'].groupby('department_name').size().reset_index(name='count')
+            
     
-    fig_bar = px.bar(dept_risk, x='department_name', y='count', 
-                     title="Negative Feedback Volume by Department",
-                     color='count', color_continuous_scale='Reds')
-    st.plotly_chart(fig_bar, use_container_width=True)
+            total_reviews = len(processed_df)
     
-    # Chart 2: The "Why?" (Automated Tags)
-    st.subheader("🔍 Root Cause Identification")
-    # Filter for negative reviews only for this chart
-    neg_reviews = processed_df[processed_df['sentiment_label'] == 'Negative']
-    fig_pie = px.pie(neg_reviews, names='issue_tag', title="Drivers of Negative Sentiment")
-    st.plotly_chart(fig_pie, use_container_width=True)
-
-    # D. The "Action List" (Drill Down)
-    st.subheader("📋 Urgent Action List")
-    st.markdown("Reviews flagged as **Negative** with **Quality** or **Sizing** issues.")
+            avg_sentiment = processed_df['sentiment_score'].mean()
     
-    # Filter for the table
-    urgent_table = processed_df[
-        (processed_df['sentiment_label'] == 'Negative')
-    ][['department_name', 'issue_tag', 'review_text', 'sentiment_score']]
+            negative_count = len(processed_df[processed_df['sentiment_label'] == 'Negative'])
     
-    st.dataframe(urgent_table, use_container_width=True)
+            
     
-    # E. Download Button (The Automation)
-    st.download_button(
-        label="📥 Download Processed Report (CSV)",
-        data=processed_df.to_csv(index=False).encode('utf-8'),
-        file_name='walmart_voc_analyzed.csv',
-        mime='text/csv',
-    )
+            col1.metric("Total Feedback Volume", f"{total_reviews:,}")
+    
+            col2.metric("Avg Customer Sentiment", f"{avg_sentiment:.2f}")
+    
+            col3.metric("Urgent Negative Reviews", f"{negative_count}", delta_color="inverse")
+    
+            
+    
+            st.divider()
+    
+    
+    
+            # C. Interactive Charts (Plotly)
+    
+            
+    
+            # Chart 1: Problems by Department (The "Where?")
+    
+            st.subheader("⚠️ Risk Analysis by Department")
+    
+            dept_risk = processed_df[processed_df['sentiment_label'] == 'Negative'].groupby('department_name').size().reset_index(name='count')
+    
+            
+    
+            fig_bar = px.bar(dept_risk, x='department_name', y='count', 
+    
+                            title="Negative Feedback Volume by Department",
+    
+                            color='count', color_continuous_scale='Reds')
+    
+            st.plotly_chart(fig_bar, use_container_width=True)
+    
+            
+    
+            # Chart 2: The "Why?" (Automated Tags)
+    
+            st.subheader("🔍 Root Cause Identification")
+    
+            # Filter for negative reviews only for this chart
+    
+            neg_reviews = processed_df[processed_df['sentiment_label'] == 'Negative']
+    
+            fig_pie = px.pie(neg_reviews, names='issue_tag', title="Drivers of Negative Sentiment")
+    
+            st.plotly_chart(fig_pie, use_container_width=True)
+    
+    
+    
+            # D. The "Action List" (Drill Down)
+    
+            st.subheader("📋 Urgent Action List")
+    
+            st.markdown("Reviews flagged as **Negative** with **Quality** or **Sizing** issues.")
+    
+            
+    
+            # Filter for the table
+    
+            urgent_table = processed_df[
+    
+                (processed_df['sentiment_label'] == 'Negative')
+    
+            ][['department_name', 'issue_tag', 'review_text', 'sentiment_score']]
+    
+            
+    
+            st.dataframe(urgent_table, use_container_width=True)
+    
+            
+    
+            # E. Download Button (The Automation)
+    
+            st.download_button(
+    
+                label="📥 Download Processed Report (CSV)",
+    
+                data=processed_df.to_csv(index=False).encode('utf-8'),
+    
+                file_name='walmart_voc_analyzed.csv',
+    
+                mime='text/csv',
+    
+            )
+    
+    
