@@ -204,7 +204,7 @@ if df_to_process is not None:
     
             # E. Download Button (The Automation)
     
-                st.download_button(
+            st.download_button(
     
                     label="📥 Download Processed Report (CSV)",
     
