@@ -5,7 +5,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import plotly.express as px
 
 # --- 1. SETUP & CONFIGURATION ---
-st.set_page_config(page_title="Walmart VoC Insight Engine", layout="wide")
+st.set_page_config(page_title="VoC Insight Engine", layout="wide")
 
 # Download NLTK resources silently
 nltk.download('vader_lexicon', quiet=True)
@@ -53,7 +53,7 @@ def analyze_data(df):
     
     df['sentiment_label'] = df['sentiment_score'].apply(get_sentiment_label)
     
-    # 3. AUTOMATED ISSUE TAGGING (The "Walmart Value Add")
+    # 3. AUTOMATED ISSUE TAGGING (The "Business Value Add")
     # This simulates an AI detecting specific business problems
     def tag_issue(text):
         text = str(text).lower()
@@ -73,7 +73,7 @@ def analyze_data(df):
     return df
 
 # --- 3. THE USER INTERFACE (The "Frontend") ---
-st.title("🛒 Walmart Voice of Customer (VoC) Engine")
+st.title("🛒 Voice of Customer (VoC) Engine")
 
 with st.expander("ℹ️ How this tool works (Backend Logic)", expanded=True):
     st.markdown("""
@@ -92,7 +92,7 @@ with col_load1:
     uploaded_file = st.file_uploader("Upload Monthly Review CSV", type=['csv'])
 
 with col_load2:
-    st.write("Women's E-Commerce Clothing Reviews")
+    st.write("[Women's E-Commerce Clothing Reviews](https://www.kaggle.com/datasets/nicapotato/womens-ecommerce-clothing-reviews)")
     use_sample = st.button("🚀 Use Sample Data")
 
 df_to_process = None
@@ -210,7 +210,7 @@ if df_to_process is not None:
     
                     data=processed_df.to_csv(index=False).encode('utf-8'),
     
-                    file_name='walmart_voc_analyzed.csv',
+                    file_name='voc_analyzed_report.csv',
     
                     mime='text/csv',
     
@@ -220,7 +220,7 @@ if df_to_process is not None:
     
             st.divider()
     
-            st.caption("© 2026 LEMINE MBARECK | Walmart VoC Insight Engine")
+            st.caption("© 2026 LEMINE MBARECK | VoC Insight Engine")
     
             
     
