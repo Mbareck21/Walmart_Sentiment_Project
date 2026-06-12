@@ -2,45 +2,126 @@
 
 **[🚀 View Live Demo](https://walmartvoc.streamlit.app/)**
 
-## Overview
-The **Voice of Customer (VoC) Insight Engine** is a specialized analytical tool designed to streamline the analysis of customer feedback for merchandising and product teams. 
+Turn thousands of raw product reviews into a ranked, *actionable* punch list for
+merchandising teams — using a **hybrid, cost-aware AI pipeline** that is free and
+open-source end to end.
 
-Merchandising teams are often overwhelmed by the volume of customer reviews, making it difficult to spot critical quality control or supply chain issues buried in the noise. This application solves that problem by automating the analyst workflow—cleaning data, scoring sentiment, and tagging logic—to surface "needles in the haystack" instantly.
+> Merch teams drown in reviews and miss the quality, sizing, and supply-chain
+> problems buried in the noise. This engine reads the haystack and hands back the
+> needles: *what* customers complain about, *where* it concentrates, *how urgent*
+> it is, and *what to do next*.
 
-The demo uses the **[Women's E-Commerce Clothing Reviews](https://www.kaggle.com/datasets/nicapotato/womens-ecommerce-clothing-reviews)** dataset from Kaggle.
+The demo uses the **[Women's E-Commerce Clothing Reviews](https://www.kaggle.com/datasets/nicapotato/womens-ecommerce-clothing-reviews)** dataset (22,641 reviews).
 
-### Key Features
-*   **Sentiment Analysis (NLTK VADER):** Goes beyond simple keyword counting by using the Valence Aware Dictionary and sEntiment Reasoner to understand the intensity and context of customer feedback (e.g., distinguishing "not good" from "good").
-*   **Automated Issue Tagging:** A custom rule engine scans for high-risk keywords to automatically categorize root causes into actionable buckets such as **Sizing**, **Quality**, **Supply Chain**, and **Pricing**.
-*   **Interactive Visualizations:** Provides instant visibility into risk distribution by department and specific drivers of negative sentiment.
-*   **Urgent Action Lists:** Automatically flags and isolates negative reviews related to quality or sizing for immediate attention.
+---
+
+## What makes this version different
+
+This is a ground-up rebuild of a single-file prototype into a tested, modular
+engine. The headline upgrades:
+
+| Capability | Original | This version |
+|---|---|---|
+| Sentiment | One VADER score per review | VADER **+ aspect-based** sentiment per clause |
+| Granularity | Whole-review polarity | Per-aspect scores: *Fit, Quality, Style, Comfort, Price, Shipping* |
+| Issue tagging | Keyword presence (so "perfect **fit**" → *Sizing Issue* 🐛) | Tagged only when the aspect is actually **negative** |
+| Root cause | — | **Hybrid LLM deep-dive**: summary, severity (1–5), recommended action |
+| Urgency | — | **Severity score** from sentiment + rating + red-flag phrases |
+| Architecture | One 200-line `app.py` | `voc/` package + **12 passing tests** |
+| Cost | Free | **Still free** — local Ollama by default, offline rules fallback |
+
+**Why "hybrid"?** Running an LLM on all 22k reviews is slow and expensive.
+Instead, VADER scores *everything* in milliseconds for free, and the LLM is
+reserved for a deep-dive on only the worst negative reviews — the classic
+production pattern for controlling AI cost.
+
+### The bug this fixes (a good interview story)
+The original tagged any review containing `fit`/`size` as a *Sizing Issue* — even
+*"the fit is perfect."* Here, a clause is scored for sentiment **before** it
+becomes an issue tag, so tags mean *problems*, not *topics*. There's a regression
+test for exactly this (`tests/test_aspects_tagging.py`).
+
+---
+
+## Architecture
+
+```
+voc/
+├── config.py      # aspect taxonomy + LLM backend settings (the tunable knobs)
+├── loading.py     # CSV load + flexible column mapping (raises, doesn't print)
+├── sentiment.py   # fast VADER pass (cheap first stage)
+├── aspects.py     # ★ aspect-based sentiment: split clauses, score per aspect
+├── severity.py    # 1–5 urgency heuristic (your domain logic lives here)
+├── tagging.py     # negative aspects → business issue tags
+├── llm.py         # hybrid deep-dive: OpenAI-compatible client + offline fallback
+├── pipeline.py    # orchestration + KPIs + CSV export
+└── schemas.py     # typed result objects
+app.py             # Streamlit dashboard (thin UI over voc/)
+tests/             # pytest suite (runs fully offline)
+```
+
+The data flow: **load → VADER → aspects → tags → severity → (optional) LLM deep-dive.**
+
+---
 
 ## Setup
 
-1.  **Create a virtual environment:**
-    ```bash
-    python -m venv venv
-    ```
+```bash
+# 1. create & activate a virtual environment
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # macOS / Linux
 
-2.  **Activate the virtual environment:**
-    *   Windows: `.\venv\Scripts\activate`
-    *   Mac/Linux: `source venv/bin/activate`
+# 2. install dependencies
+pip install -r requirements.txt
 
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+# 3. run
+python -m streamlit run app.py
+```
 
-## Usage
+Then click **🚀 Use Sample Data**, or upload any CSV with a column that looks
+like *Review Text* (department, rating, etc. are auto-detected if present).
 
-1.  **Run the application:**
-    ```bash
-    python -m streamlit run app.py
-    ```
+### Optional: enable the AI deep-dive (free, local)
+The app works immediately with a free offline rules engine. To enable the **LLM**
+deep-dive at $0 with no signup, install [Ollama](https://ollama.com) and pull a
+small model:
 
-2.  **Explore Data:**
-    *   Click **"🚀 Use Sample Data"** to instantly see the dashboard using the built-in dataset.
-    *   Alternatively, upload your own CSV file. The app will automatically look for columns containing "Review Text" and "Department Name".
+```bash
+ollama pull llama3.2          # ~2 GB, free, runs locally
+```
+
+That's it — the app auto-detects the local Ollama server. The client is
+**OpenAI-compatible**, so you can instead point it at the **Groq** or **Google
+Gemini** free tiers (which also work on a deployed demo) by copying
+`.env.example` to `.env` and setting the backend. See that file for ready-made
+configs.
+
+---
+
+## Make it your own
+
+Two files encode *business judgement* and are designed to be customised — these
+are the most valuable places to add your own domain knowledge:
+
+1. **`voc/config.py` → `ASPECTS`** — the aspect taxonomy. Swap the apparel
+   keywords for electronics, grocery, etc. to retarget the whole engine.
+2. **`voc/severity.py` → `score_severity()`** — how urgency is computed from
+   sentiment, star rating, breadth of complaints, and red-flag phrases. There are
+   many defensible weightings; the default is a starting point.
+
+---
+
+## Testing
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+```
+
+The suite covers column mapping, aspect splitting, the issue-tagging regression,
+severity escalation, the pipeline, and the offline deep-dive — all without a
+network or an LLM.
 
 ## License
-© 2026 LEMINE MBARECK. This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+© 2026 LEMINE MBARECK. MIT License — see [LICENSE](LICENSE).

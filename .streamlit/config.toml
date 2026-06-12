@@ -1,0 +1,11 @@
+# Dark theme with Walmart-inspired accents (blue #0071dc, yellow #ffc220).
+[theme]
+base = "dark"
+primaryColor = "#0071dc"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#161b24"
+textColor = "#fafafa"
+font = "sans serif"
+
+[server]
+maxUploadSize = 200
