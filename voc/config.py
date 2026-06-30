@@ -1,33 +1,22 @@
-"""Central configuration for the VoC Insight Engine.
-
-Everything tunable lives here: the aspect taxonomy that powers granular
-aspect-based sentiment, and the (free) LLM backend settings used for the
-hybrid deep-dive. All defaults are free / offline-friendly.
-"""
+"""Central configuration: the aspect taxonomy and the (free) LLM backend settings."""
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from urllib.parse import urlparse
 
-try:  # optional: load a local .env if present
+try:
     from dotenv import load_dotenv
 
     load_dotenv()
-except Exception:  # pragma: no cover - dotenv is optional
+except Exception:
     pass
 
 
-# ---------------------------------------------------------------------------
-# Aspect taxonomy  (DOMAIN KNOWLEDGE — this is the part worth customising)
-# ---------------------------------------------------------------------------
-# Each aspect maps to the keywords/phrases that signal it in a review. The
-# aspect engine (voc/aspects.py) splits each review into clauses and scores the
-# sentiment of ONLY the clauses that mention an aspect — so a single review can
-# be positive on "Style" and negative on "Fit & Sizing" at the same time.
-#
-# This taxonomy is the most domain-specific part of the system. To adapt the
-# engine to, say, electronics instead of apparel, this is the dict you rewrite.
+# The aspect taxonomy: each aspect maps to the keywords that signal it in a review.
+# This is the most domain-specific part of the system; rewrite it to adapt to a
+# different product category.
 ASPECTS: dict[str, list[str]] = {
     "Fit & Sizing": [
         "fit", "fits", "fitted", "size", "sizing", "tight", "loose", "snug",
@@ -62,7 +51,7 @@ ASPECTS: dict[str, list[str]] = {
     ],
 }
 
-# Maps a NEGATIVE aspect to the business "issue tag" merchandising teams act on.
+# Maps a negative aspect to the business issue tag a merchandising team acts on.
 ASPECT_TO_ISSUE: dict[str, str] = {
     "Fit & Sizing": "Sizing Issue",
     "Quality & Material": "Quality Issue",
@@ -72,25 +61,19 @@ ASPECT_TO_ISSUE: dict[str, str] = {
     "Shipping & Delivery": "Supply Chain",
 }
 
-# High-risk phrases that escalate severity regardless of overall score.
+# Phrases that escalate severity regardless of overall sentiment.
 CRITICAL_PHRASES: list[str] = [
     "ripped", "tore", "torn", "fell apart", "broke", "broken", "refund",
     "never again", "waste of money", "returned", "defective", "hole",
 ]
 
-# Sentiment thresholds (VADER compound score).
 POS_THRESHOLD = 0.05
 NEG_THRESHOLD = -0.05
 
 
 @dataclass
 class LLMConfig:
-    """Settings for the hybrid deep-dive backend (OpenAI-compatible).
-
-    Defaults point at a local, FREE Ollama server. The same code works with the
-    Groq or Google Gemini free tiers by overriding base_url / model / api_key
-    via environment variables (see .env.example).
-    """
+    """OpenAI-compatible backend settings; defaults to a local Ollama server."""
 
     base_url: str = field(
         default_factory=lambda: os.getenv("VOC_LLM_BASE_URL", "http://localhost:11434/v1")
@@ -104,12 +87,7 @@ class LLMConfig:
 
     @property
     def host_label(self) -> str:
-        host = (
-            self.base_url.replace("/v1", "")
-            .replace("http://", "")
-            .replace("https://", "")
-        )
-        return f"{self.model} @ {host}"
+        return f"{self.model} @ {urlparse(self.base_url).netloc}"
 
 
 def get_llm_config() -> LLMConfig:

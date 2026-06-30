@@ -39,6 +39,12 @@ def process(raw_df: pd.DataFrame):
 
 
 @st.cache_data(show_spinner=False)
+def load_sample(path: str) -> pd.DataFrame:
+    """Cache the sample CSV read so reruns (e.g. picking a review) stay fast."""
+    return load_reviews(path)
+
+
+@st.cache_data(show_spinner=False)
 def cached_deep_dive(text, score, rating, prefer_llm, model, base_url):
     """Per-review deep-dive, cached so re-selecting a review is instant.
 
@@ -77,15 +83,10 @@ with st.sidebar:
         st.warning(
             f"LLM backend offline (`{cfg.host_label}`).\n\n"
             "Deep-dives use the **free rules engine**. "
-            "Start Ollama to enable the LLM — see the README."
+            "Add a backend key in `.env` to enable the LLM — see `.env.example`."
         )
     use_llm = st.toggle("Use LLM for deep-dive", value=available, disabled=not available)
     max_dd = st.slider("Max reviews to deep-dive", 5, 50, cfg.max_deep_dive, step=5)
-    st.divider()
-    st.caption(
-        "Backend is configured via env vars (Ollama / Groq / Gemini). "
-        "See `.env.example`."
-    )
 
 
 # --------------------------------------------------------------------------- #
@@ -123,15 +124,17 @@ with col_load2:
         "[Sample: Women's E-Commerce Clothing Reviews]"
         "(https://www.kaggle.com/datasets/nicapotato/womens-ecommerce-clothing-reviews)"
     )
-    use_sample = st.button("🚀 Use Sample Data", width="stretch")
+    if st.button("🚀 Use Sample Data", width="stretch"):
+        st.session_state["use_sample"] = True
 
 raw_df = None
 try:
     if uploaded is not None:
         raw_df = load_reviews(uploaded)
-    elif use_sample:
+        st.session_state.pop("use_sample", None)  # an upload overrides the sample
+    elif st.session_state.get("use_sample"):
         if os.path.exists(SAMPLE_PATH):
-            raw_df = load_reviews(SAMPLE_PATH)
+            raw_df = load_sample(SAMPLE_PATH)
         else:
             st.error(f"Sample data not found at '{SAMPLE_PATH}'.")
 except ValueError as exc:

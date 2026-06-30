@@ -1,16 +1,10 @@
-"""CSV loading and column normalisation.
-
-Kept separate from the UI so it can be unit-tested and reused. Unlike the
-original app (which called st.error inside the data logic), this raises plain
-exceptions; the UI decides how to surface them.
-"""
+"""CSV loading and column normalisation, kept UI-free so it stays testable."""
 
 from __future__ import annotations
 
 import pandas as pd
 
-# Engine column -> ordered substrings that identify it (case-insensitive).
-# The first hint that matches an as-yet-unused column wins.
+# Engine column -> substrings (case-insensitive) that identify it; first match wins.
 _COLUMN_HINTS: dict[str, list[str]] = {
     "review_text": ["review text", "review", "comment", "feedback"],
     "department_name": ["department"],
@@ -46,11 +40,9 @@ def _match_columns(df: pd.DataFrame) -> dict[str, str]:
 
 
 def load_reviews(source) -> pd.DataFrame:
-    """Read a CSV (path or file-like) or DataFrame and normalise the schema.
+    """Read a CSV (path/file-like) or DataFrame and normalise the schema.
 
-    Requires a review-text column; raises ValueError if none is found.
-    `department_name` falls back to 'Unknown'; `rating` is coerced to numeric.
-    Empty / null reviews are dropped.
+    Raises ValueError if no review-text column is found.
     """
     df = source if isinstance(source, pd.DataFrame) else pd.read_csv(source)
     df = df.rename(columns=_match_columns(df))
