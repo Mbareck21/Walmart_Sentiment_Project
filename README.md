@@ -35,7 +35,7 @@ Instead, VADER scores *everything* in milliseconds for free, and the LLM is
 reserved for a deep-dive on only the worst negative reviews — the classic
 production pattern for controlling AI cost.
 
-### The bug this fixes (a good interview story)
+### Tags mean problems, not topics
 The original tagged any review containing `fit`/`size` as a *Sizing Issue* — even
 *"the fit is perfect."* Here, a clause is scored for sentiment **before** it
 becomes an issue tag, so tags mean *problems*, not *topics*. There's a regression
