@@ -34,8 +34,12 @@ venv.bak/
 # Streamlit (keep config.toml; ignore only local secrets)
 .streamlit/secrets.toml
 
-# Claude Code session memory (harness-local, not project code)
+# Claude Code (harness-local, not project code)
 .remember/
+.claude/
+
+# Editor / IDE
+.idea/
 
 # Local data exports
 *.analyzed.csv
