@@ -1,9 +1,8 @@
-"""Severity scoring — how urgently should the merch team act on a review?
+"""Severity scoring: how urgently the merchandising team should act on a review.
 
-This is intentionally a small, opinionated function. It encodes a business
-judgement (how to weigh sentiment vs. star rating vs. specific red-flag words)
-and there are several defensible ways to do it, which makes it a natural place
-to inject your own domain knowledge. See README "Make it your own".
+A small, opinionated function. It encodes a business judgement (how to weigh
+sentiment, star rating, and red-flag words), and there are several defensible
+ways to do it, which makes it a natural place to add domain knowledge.
 """
 
 from __future__ import annotations
@@ -28,11 +27,9 @@ def score_severity(
 ) -> int:
     """Return an integer urgency from 1 (minor) to 5 (critical).
 
-    Default heuristic:
-      * start from how negative the overall sentiment is,
-      * escalate when the star rating is low,
-      * escalate per *additional* negative aspect (broad dissatisfaction),
-      * hard-escalate when a critical phrase (e.g. "ripped", "refund") appears.
+    Heuristic: start from how negative the sentiment is, escalate when the star
+    rating is low, escalate for each additional negative aspect, and escalate
+    again when a critical phrase (e.g. "ripped", "refund") appears.
     """
     if sentiment_score <= -0.6:
         severity = 4

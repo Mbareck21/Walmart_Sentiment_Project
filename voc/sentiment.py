@@ -1,8 +1,4 @@
-"""Fast, free, whole-review sentiment via NLTK VADER.
-
-This is the cheap first pass of the hybrid pipeline: every review is scored in
-microseconds so the expensive LLM deep-dive can be reserved for the negatives.
-"""
+"""Whole-review sentiment via NLTK VADER, the cheap first pass of the pipeline."""
 
 from __future__ import annotations
 

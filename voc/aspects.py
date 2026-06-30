@@ -1,10 +1,9 @@
-"""Aspect-based sentiment — the granular core of the engine.
+"""Aspect-based sentiment: the granular core of the engine.
 
-Whole-review sentiment hides mixed feedback: "love the fabric but the fit is
-terrible" nets out near neutral, which is useless to a merchandiser. This module
-splits each review into clauses, decides which aspect(s) each clause is about,
-and scores those clauses independently — so we can report *what* customers
-dislike, not merely *that* they are unhappy.
+Whole-review sentiment hides mixed feedback. "Love the fabric but the fit is
+terrible" nets out near neutral. This module splits each review into clauses,
+decides which aspects each clause is about, and scores those clauses
+independently, so it reports what customers dislike, not just that they are.
 """
 
 from __future__ import annotations

@@ -1,9 +1,8 @@
-"""Pipeline orchestration: turn raw reviews into an enriched, actionable frame.
+"""Pipeline orchestration: raw reviews to an enriched, actionable frame.
 
-`enrich()` runs only the free, offline passes (sentiment -> aspects -> tags ->
-severity) so it is fast and deterministic. The expensive LLM deep-dive is run
-separately by the UI on just the top negative reviews (`top_negative`), which is
-what makes the hybrid approach cheap.
+enrich() runs only the free offline passes (sentiment, aspects, tags, severity).
+The LLM deep-dive is run separately by the UI on just the top negative reviews,
+which is what keeps the hybrid approach cheap.
 """
 
 from __future__ import annotations

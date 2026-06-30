@@ -1,9 +1,3 @@
-"""VoC Insight Engine — Streamlit dashboard.
-
-Thin UI layer over the `voc` package. All analytics live in `voc/`; this file
-only loads data, caches the heavy work, and draws the dashboard.
-"""
-
 from __future__ import annotations
 
 import os
@@ -29,11 +23,7 @@ SEVERITY_LABELS = {1: "Minor", 2: "Low", 3: "Medium", 4: "High", 5: "Critical"}
 # --------------------------------------------------------------------------- #
 @st.cache_data(show_spinner=False, persist="disk")
 def process(raw_df: pd.DataFrame):
-    """Run the offline enrichment once per dataset and derive chart frames.
-
-    persist="disk" keeps the result across restarts, so only the very first
-    analysis of a given dataset pays the full cost.
-    """
+    """Enrich the dataset once and derive chart frames; persisted to disk across restarts."""
     enriched = enrich(raw_df)
     return enriched, aspect_long_frame(enriched), summary_metrics(enriched)
 
@@ -46,10 +36,7 @@ def load_sample(path: str) -> pd.DataFrame:
 
 @st.cache_data(show_spinner=False)
 def cached_deep_dive(text, score, rating, prefer_llm, model, base_url):
-    """Per-review deep-dive, cached so re-selecting a review is instant.
-
-    model/base_url are part of the cache key so switching backend invalidates.
-    """
+    """Per-review deep-dive, cached on (text, model, base_url) so re-selecting is instant."""
     cfg = get_llm_config()
     cfg.model, cfg.base_url = model, base_url
     return llm_mod.deep_dive(
@@ -70,7 +57,7 @@ def severity_badge(sev: int) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# Sidebar — backend controls
+# Sidebar: backend controls
 # --------------------------------------------------------------------------- #
 cfg = get_llm_config()
 with st.sidebar:
@@ -83,7 +70,7 @@ with st.sidebar:
         st.warning(
             f"LLM backend offline (`{cfg.host_label}`).\n\n"
             "Deep-dives use the **free rules engine**. "
-            "Add a backend key in `.env` to enable the LLM — see `.env.example`."
+            "Add a backend key in `.env` to enable the LLM. See `.env.example`."
         )
     use_llm = st.toggle("Use LLM for deep-dive", value=available, disabled=not available)
     max_dd = st.slider("Max reviews to deep-dive", 5, 50, cfg.max_deep_dive, step=5)
@@ -97,19 +84,18 @@ st.title("🛒 Voice of Customer (VoC) Insight Engine")
 with st.expander("ℹ️ How this tool works", expanded=False):
     st.markdown(
         """
-**The problem.** Merchandising teams drown in thousands of reviews and miss the
-quality, sizing, and supply-chain issues buried in the noise.
+This tool reads thousands of product reviews and returns the issues that matter
+most to a merchandising team.
 
-**The approach — a hybrid, cost-aware pipeline:**
-1. **Fast sentiment (VADER):** every review is scored in milliseconds, for free.
-2. **Aspect-based sentiment:** each review is split into clauses and scored *per
-   aspect* (Fit, Quality, Style, Comfort, Price, Shipping) — so we capture
-   *"love the fabric **but** the fit is off"* instead of one blurry average.
-3. **Issue tagging & severity:** negative aspects become actionable tags and a
-   1–5 urgency score (sentiment + rating + red-flag phrases).
-4. **AI deep-dive (optional):** an LLM analyses only the worst reviews for root
-   cause and a recommended action — falling back to a rules engine when no model
-   is available, so it always works.
+1. **Sentiment (VADER).** Every review is scored in milliseconds, for free.
+2. **Aspect-based sentiment.** Each review is split into clauses and scored per
+   aspect (Fit, Quality, Style, Comfort, Price, Shipping), so it captures
+   "love the fabric but the fit is off" instead of one overall average.
+3. **Issue tagging and severity.** Negative aspects become issue tags with a
+   1 to 5 urgency score from sentiment, rating, and red-flag phrases.
+4. **LLM deep-dive (optional).** An LLM analyses only the worst reviews for root
+   cause and a recommended action. It falls back to a rules engine when no model
+   is available.
         """
     )
 
@@ -147,7 +133,7 @@ if raw_df is None:
 with st.spinner("Running analysis (sentiment → aspects → tags → severity)…"):
     df, long_df, kpis = process(raw_df)
 
-st.success(f"Analysis complete — {kpis['total']:,} reviews processed.")
+st.success(f"Analysis complete. {kpis['total']:,} reviews processed.")
 
 # --------------------------------------------------------------------------- #
 # KPI row
@@ -165,7 +151,7 @@ st.divider()
 # Aspect-based sentiment (the granular headline)
 # --------------------------------------------------------------------------- #
 st.subheader("🎯 Aspect-Based Sentiment")
-st.caption("What customers actually praise and complain about — not just an overall score.")
+st.caption("What customers actually praise and complain about, not just an overall score.")
 
 ac1, ac2 = st.columns(2)
 with ac1:
@@ -286,4 +272,4 @@ st.download_button(
 )
 
 st.divider()
-st.caption("© 2026 LEMINE MBARECK · VoC Insight Engine — hybrid VADER + LLM, free & open-source.")
+st.caption("© 2026 LEMINE MBARECK · VoC Insight Engine · hybrid VADER + LLM, free and open source.")

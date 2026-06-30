@@ -1,11 +1,10 @@
-"""Hybrid LLM deep-dive (free, local Ollama by default).
+"""Hybrid LLM deep-dive with an offline fallback.
 
-For the relatively few negative reviews, ask an LLM to produce a structured
-root-cause analysis. If no LLM backend is reachable, fall back to a
-deterministic rules-based analysis so the feature still works fully offline.
-
-The client is OpenAI-compatible, so the same code drives Ollama (default), Groq
-or Google Gemini free tiers — only the env vars change (see .env.example).
+For the worst negative reviews, ask an LLM for a structured root-cause analysis.
+If no backend is reachable, fall back to a deterministic rules-based analysis so
+the feature still works fully offline. The client is OpenAI-compatible, so the
+same code drives Ollama, Groq, or Google Gemini. Only the env vars change
+(see .env.example).
 """
 
 from __future__ import annotations

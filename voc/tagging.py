@@ -1,10 +1,8 @@
 """Issue tagging derived from aspect sentiment.
 
-The original app tagged by raw keyword presence, so "the fit is perfect" was
-flagged as a Sizing Issue. Here a tag is emitted only when the relevant aspect
-is actually NEGATIVE — so tags mean problems, not topics. Reviews can carry
-multiple tags ("issue_tags"); "issue_tag" keeps a single dominant label for
-back-compatibility with the original pie chart.
+A tag is emitted only when the relevant aspect is actually negative, so tags
+mean problems, not topics. Reviews can carry multiple tags ("issue_tags");
+"issue_tag" keeps a single dominant label for the pie chart.
 """
 
 from __future__ import annotations
