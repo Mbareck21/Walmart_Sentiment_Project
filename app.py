@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+from pathlib import Path
 
 import pandas as pd
 import plotly.express as px
@@ -14,7 +14,7 @@ from voc.pipeline import enrich, summary_metrics, to_export_df, top_negative
 
 st.set_page_config(page_title="VoC Insight Engine", layout="wide", page_icon="🛒")
 
-SAMPLE_PATH = "data/Reviews.csv"
+SAMPLE_PATH = Path(__file__).resolve().parent / "data" / "Reviews.csv"
 SEVERITY_LABELS = {1: "Minor", 2: "Low", 3: "Medium", 4: "High", 5: "Critical"}
 
 
@@ -29,7 +29,7 @@ def process(raw_df: pd.DataFrame):
 
 
 @st.cache_data(show_spinner=False)
-def load_sample(path: str) -> pd.DataFrame:
+def load_sample(path: str | Path) -> pd.DataFrame:
     """Cache the sample CSV read so reruns (e.g. picking a review) stay fast."""
     return load_reviews(path)
 
@@ -119,7 +119,7 @@ try:
         raw_df = load_reviews(uploaded)
         st.session_state.pop("use_sample", None)  # an upload overrides the sample
     elif st.session_state.get("use_sample"):
-        if os.path.exists(SAMPLE_PATH):
+        if SAMPLE_PATH.exists():
             raw_df = load_sample(SAMPLE_PATH)
         else:
             st.error(f"Sample data not found at '{SAMPLE_PATH}'.")
